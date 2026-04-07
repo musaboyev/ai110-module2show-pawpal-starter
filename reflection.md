@@ -3,9 +3,24 @@
 ## 1. System Design
 
 **a. Initial design**
+   actions: add a pet, schedule a walk, feeding
 
 - Briefly describe your initial UML design.
+
+My UML design outlines a simple pet care system with four main parts: Owner, Pet, Task, and Scheduler. Each part has its role — pets store information, tasks represent things that need to be done, and the scheduler helps with organizing.
+
+
 - What classes did you include, and what responsibilities did you assign to each?
+
+The system consists of four main classes: Owner, Pet, Task, and Scheduler.
+
+Owner manages a collection of pets.
+
+Each Pet stores basic information like name, animal type, breed, and age, and is associated with multiple tasks.
+
+Task represents individual care actions such as feeding, walking, or medication, including attributes like time and priority.
+
+Scheduler is responsible for organizing and prioritizing tasks, and generating a daily task list.
 
 **b. Design changes**
 
