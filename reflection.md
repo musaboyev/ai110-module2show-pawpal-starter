@@ -25,7 +25,9 @@ Scheduler is responsible for organizing and prioritizing tasks, and generating a
 **b. Design changes**
 
 - Did your design change during implementation?
+  - Yes. I added a dedicated `Scheduler` class after the initial design so that scheduling logic stays separate from the data model.
 - If yes, describe at least one change and why you made it.
+  - I changed the design to separate task ordering into `Scheduler` instead of keeping it inside `Owner` or `Pet`, which makes the system easier to extend later.
 
 ---
 
