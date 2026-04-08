@@ -51,6 +51,25 @@ PawPal+ now includes smarter scheduling features on top of the core task model:
 - Detecting conflicts when tasks are scheduled at the same exact time, with owner and same-pet warnings.
 - Supporting recurring tasks by automatically creating the next occurrence when a daily or weekly task is completed.
 
+## Features
+
+- Add pets and tasks through the Streamlit UI
+- Schedule tasks by priority, time, and pet assignment
+- Filter the schedule by pet and completion status
+- Highlight scheduling conflicts with user-friendly warnings
+- Automatically create next recurring tasks for daily/weekly items
+- Explain the generated schedule in human-readable text
+
+## Demo
+
+Open the app with Streamlit and use the form to add pets and tasks. Generate the schedule to see the sorted task list, conflict warnings, and explanation output.
+
+Add a screenshot of the final app here once you have one:
+
+```markdown
+<a href="/course_images/ai110/your_screenshot_name.png" target="_blank"><img src="/course_images/ai110/your_screenshot_name.png" alt="PawPal+ demo" /></a>
+```
+
 ## Testing PawPal+
 
 To verify the system, run:

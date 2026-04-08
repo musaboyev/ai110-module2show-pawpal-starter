@@ -54,12 +54,16 @@ Scheduler is responsible for organizing and prioritizing tasks, and generating a
 **a. How you used AI**
 
 - How did you use AI tools during this project (for example: design brainstorming, debugging, refactoring)?
+  - I used AI to help translate the UML into Python class skeletons, review the scheduler design, and wire the Streamlit UI to the backend. AI also helped draft tests and summarize the new features in the README.
 - What kinds of prompts or questions were most helpful?
+  - Prompts asking for concrete class methods, how to sort tasks by time, how to store objects in `st.session_state`, and how to detect conflicts were the most useful.
 
 **b. Judgment and verification**
 
 - Describe one moment where you did not accept an AI suggestion as-is.
+  - I rejected a suggestion that made the scheduler too complex by trying to handle duration overlaps immediately. I kept the design simpler and only implemented exact-time conflict detection for the MVP.
 - How did you evaluate or verify what the AI suggested?
+  - I compared suggestions against the project requirements, ran the code, and added tests for the behaviors I implemented. If the suggestion introduced unnecessary complexity, I simplified it.
 
 ---
 
@@ -68,12 +72,16 @@ Scheduler is responsible for organizing and prioritizing tasks, and generating a
 **a. What you tested**
 
 - What behaviors did you test?
+  - I tested task completion, pet task addition, sorting by scheduled time, filtering tasks by pet, recurring daily task creation, and duplicate-time conflict detection.
 - Why were these tests important?
+  - These tests ensure that the scheduler behaves correctly for the core use cases and that the app can handle common pet care scheduling scenarios reliably.
 
 **b. Confidence**
 
 - How confident are you that your scheduler works correctly?
+  - I am reasonably confident in the current implementation for the features that are covered by tests. The core scheduling logic, sorting, filtering, recurrence, and conflict detection are verified.
 - What edge cases would you test next if you had more time?
+  - I would test unscheduled tasks, overlapping durations, multiple pets with the same name, and weekly recurring task behavior.
 
 ---
 
@@ -82,11 +90,14 @@ Scheduler is responsible for organizing and prioritizing tasks, and generating a
 **a. What went well**
 
 - What part of this project are you most satisfied with?
+  - I am most satisfied with building a full workflow from UML through backend logic to a working Streamlit UI with tests and documentation.
 
 **b. What you would improve**
 
 - If you had another iteration, what would you improve or redesign?
+  - I would improve the conflict detection to consider task duration overlap and add a better UI for editing existing tasks and pet details.
 
 **c. Key takeaway**
 
 - What is one important thing you learned about designing systems or working with AI on this project?
+  - I learned that AI is a powerful collaborator when I stay in control of design decisions, verify outputs, and keep the implementation simple and testable.

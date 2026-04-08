@@ -1,4 +1,5 @@
 import streamlit as st
+from datetime import datetime
 from pawpal_system import Owner, Pet, Task, Scheduler
 
 st.set_page_config(page_title="PawPal+", page_icon="🐾", layout="centered")
@@ -52,9 +53,11 @@ owner = st.session_state.owner
 st.markdown("### Add a pet")
 pet_name = st.text_input("Pet name", value="Mochi")
 species = st.selectbox("Species", ["dog", "cat", "other"])
+breed = st.text_input("Breed", value="mix")
+age = st.number_input("Age (years)", min_value=0, max_value=30, value=1)
 
 if st.button("Add pet"):
-    new_pet = Pet(name=pet_name, animal_type=species, breed="unknown", age=0)
+    new_pet = Pet(name=pet_name, animal_type=species, breed=breed, age=int(age))
     owner.add_pet(new_pet)
     st.success(f"Added pet: {new_pet.name} ({new_pet.animal_type})")
 
@@ -82,6 +85,9 @@ if pets:
     with col3:
         priority = st.selectbox("Priority", ["low", "medium", "high"], index=2)
 
+    frequency = st.selectbox("Frequency", ["none", "daily", "weekly"], index=0)
+    scheduled_time = st.time_input("Scheduled time", value=datetime.now().time().replace(hour=8, minute=0, second=0, microsecond=0))
+
     if st.button("Add task"):
         if selected_pet is not None:
             task = Task(
@@ -89,6 +95,13 @@ if pets:
                 duration_minutes=int(duration),
                 priority=priority,
                 pet_name=selected_pet.name,
+                frequency=frequency,
+                scheduled_time=datetime.now().replace(
+                    hour=scheduled_time.hour,
+                    minute=scheduled_time.minute,
+                    second=0,
+                    microsecond=0,
+                ),
             )
             selected_pet.add_task(task)
             st.success(f"Added task to {selected_pet.name}: {task_title}")
@@ -101,7 +114,7 @@ if pets:
             if pet.get_tasks():
                 st.markdown(f"**{pet.name} ({pet.animal_type})**")
                 task_rows = [
-                    {"title": t.title, "priority": t.priority, "duration": t.duration_minutes, "status": "done" if t.completed else "pending", "time": t.scheduled_time.strftime("%H:%M") if t.scheduled_time else "unscheduled"}
+                    {"title": t.title, "priority": t.priority, "duration": t.duration_minutes, "frequency": t.frequency, "status": "done" if t.completed else "pending", "time": t.scheduled_time.strftime("%H:%M") if t.scheduled_time else "unscheduled"}
                     for t in pet.get_tasks()
                 ]
                 st.table(task_rows)
@@ -113,15 +126,38 @@ else:
 st.divider()
 
 st.subheader("Build Schedule")
+if pets:
+    schedule_pet_options = ["All"] + [pet.name for pet in pets]
+    schedule_pet_filter = st.selectbox("Filter schedule by pet", schedule_pet_options)
+    status_filter = st.selectbox("Filter schedule by status", ["all", "pending", "done"])
+else:
+    schedule_pet_filter = "All"
+    status_filter = "all"
+
 if st.button("Generate schedule"):
     if not owner.get_all_tasks():
         st.warning("Add tasks first so the scheduler has work to do.")
     else:
         scheduler = Scheduler(owner)
         schedule = scheduler.generate_daily_schedule()
+
+        if schedule_pet_filter != "All":
+            schedule = scheduler.filter_by_pet(schedule_pet_filter, schedule)
+
+        if status_filter != "all":
+            desired_completed = status_filter == "done"
+            schedule = [task for task in schedule if task.completed == desired_completed]
+
+        conflict_warnings = scheduler.detect_conflicts()
+        if conflict_warnings:
+            for warning in conflict_warnings:
+                st.warning(warning)
+        else:
+            st.success("No scheduling conflicts detected.")
+
         st.write("### Today's Schedule")
         schedule_rows = [
-            {"task": t.title, "pet": t.pet_name, "priority": t.priority, "duration": t.duration_minutes, "status": "done" if t.completed else "pending", "time": t.scheduled_time.strftime("%H:%M") if t.scheduled_time else "unscheduled"}
+            {"task": t.title, "pet": t.pet_name, "priority": t.priority, "duration": t.duration_minutes, "frequency": t.frequency, "status": "done" if t.completed else "pending", "time": t.scheduled_time.strftime("%H:%M") if t.scheduled_time else "unscheduled"}
             for t in schedule
         ]
         st.table(schedule_rows)
