@@ -36,12 +36,16 @@ Scheduler is responsible for organizing and prioritizing tasks, and generating a
 **a. Constraints and priorities**
 
 - What constraints does your scheduler consider (for example: time, priority, preferences)?
+  - The scheduler considers task priority, scheduled time, pet assignment, and completion status.
 - How did you decide which constraints mattered most?
+  - I chose priority first because urgent care tasks should come before routine tasks, then time so the schedule flows in chronological order. Completion status is used to distinguish finished work from pending items.
 
 **b. Tradeoffs**
 
 - Describe one tradeoff your scheduler makes.
+  - The scheduler detects conflicts only when tasks have the exact same scheduled time, instead of checking whether task durations overlap.
 - Why is that tradeoff reasonable for this scenario?
+  - This keeps the logic simple and reliable for an MVP. Exact-time conflict detection still catches obvious schedule collisions without adding the more complex interval arithmetic needed for full overlap detection.
 
 ---
 
