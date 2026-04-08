@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Optional
 
 
@@ -14,17 +14,34 @@ class Task:
     notes: str = ""
     completed: bool = False
     pet_name: Optional[str] = None
+    frequency: str = "none"
 
     def get_description(self) -> str:
         """Return a formatted string description of the task with status and timing info."""
         status = "done" if self.completed else "pending"
         time_label = self.scheduled_time.strftime("%H:%M") if self.scheduled_time else "unscheduled"
         pet_label = f" ({self.pet_name})" if self.pet_name else ""
-        return f"{self.title}{pet_label} [{status}] ({self.priority}, {self.duration_minutes} min, {time_label})"
+        frequency_label = f" [{self.frequency}]" if self.frequency != "none" else ""
+        return f"{self.title}{pet_label}{frequency_label} [{status}] ({self.priority}, {self.duration_minutes} min, {time_label})"
 
-    def mark_complete(self) -> None:
-        """Mark this task as completed."""
+    def mark_complete(self) -> Optional["Task"]:
+        """Mark this task as completed and return the next recurring task if applicable."""
         self.completed = True
+        if self.frequency not in {"daily", "weekly"} or self.scheduled_time is None:
+            return None
+
+        delta = timedelta(days=1 if self.frequency == "daily" else 7)
+        next_time = self.scheduled_time + delta
+        return Task(
+            title=self.title,
+            duration_minutes=self.duration_minutes,
+            priority=self.priority,
+            scheduled_time=next_time,
+            notes=self.notes,
+            completed=False,
+            pet_name=self.pet_name,
+            frequency=self.frequency,
+        )
 
     def is_complete(self) -> bool:
         """Return True if the task is complete, False otherwise."""
@@ -87,27 +104,90 @@ class Scheduler:
         """Return all tasks from the owner's pets."""
         return self.owner.get_all_tasks()
 
+    def sort_by_time(self, tasks: Optional[List[Task]] = None) -> List[Task]:
+        """Return tasks sorted by scheduled time, with unscheduled tasks last."""
+        tasks = self.get_tasks() if tasks is None else tasks
+        return sorted(tasks, key=lambda task: task.scheduled_time or datetime.max)
+
+    def filter_by_pet(self, pet_name: str, tasks: Optional[List[Task]] = None) -> List[Task]:
+        """Return tasks that belong to the given pet."""
+        tasks = self.get_tasks() if tasks is None else tasks
+        return [task for task in tasks if task.pet_name == pet_name]
+
+    def filter_by_completion(self, completed: bool, tasks: Optional[List[Task]] = None) -> List[Task]:
+        """Return tasks that match the completion status."""
+        tasks = self.get_tasks() if tasks is None else tasks
+        return [task for task in tasks if task.completed is completed]
+
     def generate_daily_schedule(self) -> List[Task]:
         """Generate and return a prioritized daily schedule of tasks."""
         tasks = self.get_tasks()
 
         priority_order = {"high": 1, "medium": 2, "low": 3}
-        tasks.sort(key=lambda task: (
+        return sorted(tasks, key=lambda task: (
             priority_order.get(task.priority, 99),
             task.completed,
             task.scheduled_time or datetime.max,
             task.duration_minutes,
         ))
-        return tasks
 
     def explain_schedule(self) -> List[str]:
         """Return a list of formatted descriptions for today's schedule."""
         schedule = self.generate_daily_schedule()
         return [task.get_description() for task in schedule]
 
+    def mark_task_complete(self, task: Task) -> Optional[Task]:
+        """Mark a task complete and add the next recurring occurrence if needed."""
+        next_task = task.mark_complete()
+        if next_task is None:
+            return None
+
+        for pet in self.owner.get_pets():
+            if pet.name == task.pet_name:
+                pet.add_task(next_task)
+                return next_task
+
+        return None
+
+    def detect_conflicts(self, tasks: Optional[List[Task]] = None) -> List[str]:
+        """Detect tasks scheduled at the same time and return warning messages."""
+        tasks = self.get_tasks() if tasks is None else tasks
+        scheduled_tasks = [task for task in tasks if task.scheduled_time is not None]
+        grouped: dict[datetime, List[Task]] = {}
+        for task in scheduled_tasks:
+            time_key = task.scheduled_time.replace(second=0, microsecond=0)
+            grouped.setdefault(time_key, []).append(task)
+
+        warnings: List[str] = []
+        for time, entries in grouped.items():
+            if len(entries) < 2:
+                continue
+            pet_groups: dict[str, List[Task]] = {}
+            for task in entries:
+                if task.pet_name:
+                    pet_groups.setdefault(task.pet_name, []).append(task)
+
+            same_pet_conflicts = [pet for pet, tasks_by_pet in pet_groups.items() if len(tasks_by_pet) > 1]
+            if same_pet_conflicts:
+                for pet in same_pet_conflicts:
+                    warnings.append(
+                        f"Conflict: {pet} has multiple tasks scheduled at {time.strftime('%H:%M')}"
+                    )
+            if len(pet_groups) > 1:
+                involved = ", ".join(sorted(pet_groups.keys()))
+                warnings.append(
+                    f"Potential owner conflict: tasks for {involved} are scheduled at {time.strftime('%H:%M')}"
+                )
+
+        return warnings
+
     def schedule_next_task(self) -> Optional[Task]:
         """Return the highest-priority pending task, or None if no task is pending."""
         pending = [task for task in self.get_tasks() if not task.completed]
         if not pending:
             return None
-        return sorted(pending, key=lambda task: (task.priority, task.duration_minutes))[0]
+        return sorted(pending, key=lambda task: (
+            {"high": 1, "medium": 2, "low": 3}.get(task.priority, 99),
+            task.scheduled_time or datetime.max,
+            task.duration_minutes,
+        ))[0]
