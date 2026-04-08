@@ -67,7 +67,10 @@ Open the app with Streamlit and use the form to add pets and tasks. Generate the
 Add a screenshot of the final app here once you have one:
 
 ```markdown
-<a href="/course_images/ai110/your_screenshot_name.png" target="_blank"><img src="/course_images/ai110/your_screenshot_name.png" alt="PawPal+ demo" /></a>
+## Demo Screenshot
+
+[![App Screenshot](tg_image_2473512660.png)](tg_image_2473512660.png)
+[![App Screenshot](tg_image_2679519448.png)](tg_image_2679519448.png)
 ```
 
 ## Testing PawPal+
